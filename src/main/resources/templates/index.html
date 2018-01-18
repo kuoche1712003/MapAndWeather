@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"></meta>
+  <meta http-equiv="Content-Type" content="text/html"></meta>
+  <title>Map</title>
+  <link rel="stylesheet" type="text/css" media="all" href="css/bootstrap.min.css"></link>
+  
+  <script
+    src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="container">
+    <h1>Map</h1>
+    <div class="row">
+        <div class="col-xs-12">
+            <form class="form-inline">     
+	            <div class="form-group mx-sm-3 mb-2">
+	                <label for="address" class="sr-only">輸入地址</label>
+	                <input type="text" class="form-control" id="address" placeholder="地址"/>
+	            </div>
+	            <button type="submit" class="btn btn-primary mb-2" id="btnsure">確定</button>
+	        </form>
+        </div>
+    </div>
+    <div class="row">
+        <div id="map"></div>
+        
+    </div>
+</div>
+</body>
+</html>
+<script>
+    $(document).ready(function(){
+        $('#btnsure').on('click',function(event){
+        	event.preventDefault();
+        	$.ajax({
+                url:"/address",
+                dataType:"json",
+                type:"GET",
+                data:{address:$('#address').val()},
+                success:function(response){
+                	$('#map').html("");
+                	$('#map').append('<img border="0" src="//maps.googleapis.com/maps/api/staticmap?center='+response.lat+','+response.lng+'&amp;zoom=18&amp;size=600x400" ></img>');
+                    console.log(response);
+                }
+            });
+        	
+        });
+        
+    });
+   
+        
+   
+</script>

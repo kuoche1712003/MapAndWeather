@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+       #map {
+        height: 400px;
+        
+       }
+    </style>
+     <script
+    src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"></link>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <h3>My Google Maps Demo</h3>
+    <div class="row">
+        <div class="col-xs-12 col-md-6">
+            <div id="map"></div>
+        </div>
+        <div class="col-xs-12 col-md-6 ">
+            <div class="row">
+                <div class="col-xs-6">
+                    <b>測站名稱 :</b>
+                    <span id="locationName"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>觀測時間 :</b>   
+                    <select id="obsTime"></select>
+                </div>
+                <div class="col-xs-6">
+                     <b>高度:　</b>   
+                     <span id="ELEV"></span>
+                </div>
+                <div class="col-xs-6">
+                     <b>風向:　</b>   
+                     <span id="WDIR"></span>
+                </div>
+                <div class="col-xs-6">
+                     <b>風速:　</b>   
+                     <span id="WDSD"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>溫度:　</b>   
+                    <span id="TEMP"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>相對濕度:　</b>   
+                    <span id="HUMD"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>測站氣壓:　</b>   
+                    <span id="PRES"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>日照時數:　</b>   
+                    <span id="SUN"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>日累積雨量:　</b>   
+                    <span id="H_24R"></span>
+                </div>
+                <div class="col-xs-6">
+                    <b>小時最大陣風風速:　</b>  
+                    <span id="H_FX"></span> 
+                </div>
+                <div class="col-xs-6">
+                    <b>小時最大陣風風向:　</b> 
+                    <span id="H_XD"></span>  
+                </div>
+                <div class="col-xs-12">
+                    <b>小時最大陣風時間:　</b>   
+                    <span id="H_FXT"></span>
+                </div>
+            </div>            
+        </div>
+    </div>
+    <script>
+      function initMap() {
+        var uluru = {lat: 23.911469, lng: 120.687331};
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 6,
+          center: uluru
+        });
+        
+        
+        $.ajax({
+        	url:"/location",
+        	dataType:"json",
+            type:"GET",
+            success:function(response){
+            	console.log(response);
+            	$.each(response,function(index,value){
+            		
+            		var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(value.lat, value.lon),
+                        map: map
+                      });
+            		var infowindow = new google.maps.InfoWindow({
+            		    content: value.locationName
+            		  });
+            		marker.addListener('click', function(e) {
+            			 infowindow.open(map, marker);
+            			 $.ajax({
+            				 url:"/findWeatherByLocationName",
+            				 dataType:"json",
+            		         type:"GET",
+            		         data:{locationName:value.locationName},
+            		         success:function(response){
+            		        	 console.log(response);
+            		        	 $('#locationName').text(value.locationName);
+            		        	 $('#obsTime').html("");
+            	
+            		        	 $.each(response,function(index,value){
+            		        		 $('#obsTime').append('<option value="'+value.obsTime+'">'+value.obsTime+'</option>');
+            		        	 })
+            		        	 $('#obsTime').change();
+            		         }
+            			     
+            			 })
+                      });
+            		
+            	})
+            }
+        
+        })
+        
+        
+      } 
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCpMB_ht_wSqegI4r1X7hL0HP5ScK5Ayg&amp;callback=initMap" async="async" defer="defer">
+    </script>
+    <script>
+        $(function(){
+        	$('#obsTime').on('change',function(){
+        		$.ajax({
+        			url:"/findByObsTime",
+                    dataType:"json",
+                    type:"GET",
+                    data:{
+                    	locationName:$('#locationName').text(),
+        		        obsTime:$('#obsTime').val()
+                    },
+                    success:function(response){
+                    	console.log(response);
+                    	$('#ELEV').text(response.elev == -99 ? "無資料" : response.elev);
+                        $('#WDIR').text(response.wdir == -99 ? "無資料" : response.wdir);
+                        $('#WDSD').text(response.wdsd == -99 ? "無資料" : response.wdsd);
+                        $('#TEMP').text(response.temp == -99 ? "無資料" : response.temp);
+                        $('#HUMD').text(response.humd == -99 ? "無資料" : response.humd);
+                        $('#PRES').text(response.pres == -99 ? "無資料" : response.pres);
+                        $('#SUN').text(response.sun == -99 ? "無資料" : response.sun);
+                        $('#H_24R').text(response.h_24R == -99 ? "無資料" : response.h_24R);
+                        $('#H_FX').text(response.h_FX == -99 ? "無資料" : response.h_FX);
+                        $('#H_XD').text(response.h_XD == -99 ? "無資料" : response.h_XD);
+                        $('#H_FXT').text(response.h_FXT == -99 ? "無資料" : response.h_FXT);
+                    }
+        		})
+        	})
+        })
+    </script>
+  </body>
+</html>
